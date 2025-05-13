@@ -1,0 +1,64 @@
+[
+    {
+        "sensor_index": 151676,
+        "name": "HotWells",
+        "latitude": 29.36873,
+        "longitude": -98.468666,
+        "pm2.5": 2.4
+    },{
+        "sensor_index": 204497,
+        "name": "Harvey_E_Najim_Family_YMCA",
+        "latitude": 29.365728,
+        "longitude": -98.47932,
+        "pm2.5": 3.6
+    },
+    {
+        "sensor_index": 65503,
+        "name": "San_Antonio_Valley",
+        "latitude": 38.183674,
+        "longitude": -122.64736,
+        "pm2.5": 4.4
+    },
+    {
+        "sensor_index": 84075,
+        "name": "San_Antonio_Cres",
+        "latitude": 34.151688,
+        "longitude": -117.66096,
+        "pm2.5": 26.3
+    },
+    {
+        "sensor_index": 202939,
+        "name": "San_Antonio_and_S_17th_St",
+        "latitude": 37.340675,
+        "longitude": -121.872246,
+        "pm2.5": 2.1
+    },
+    {
+        "sensor_index": 7488,
+        "name": "Rockport_Texas",
+        "latitude": 28.01262,
+        "longitude": -97.09614,
+        "pm2.5": 10.2
+    },
+    {
+        "sensor_index": 264547,
+        "name": "Waverly_Station",
+        "latitude": 27.719545,
+        "longitude": -97.341774,
+        "pm2.5": 16.8
+    },
+    {
+        "sensor_index": 199877,
+        "name": "Kings_Crossing_West",
+        "latitude": 27.660666,
+        "longitude": -97.39259,
+        "pm2.5": 17.3
+    },
+    {
+        "sensor_index": 151658,
+        "name": "The_Pantry",
+        "latitude": 29.347933,
+        "longitude": -98.51939,
+        "pm2.5": 3.1
+    }
+]
