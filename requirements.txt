@@ -4,4 +4,5 @@ requests
 python-dotenv
 folium
 streamlit-folium
-altair
+plotly
+matplotlib
