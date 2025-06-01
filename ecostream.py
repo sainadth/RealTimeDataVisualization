@@ -1,3 +1,5 @@
+#===============================================================================#
+# Setup: Import libraries, load environment variables, and configure Streamlit page
 import streamlit as st
 import pandas as pd
 import json
@@ -10,12 +12,19 @@ from folium.plugins import MarkerCluster
 import plotly.graph_objects as go
 from contextlib import contextmanager
 import matplotlib.pyplot as plt  # Import for color palette
+import about  
+import pytz  # Add this import for timezone conversion
 
+#===============================================================================#
 # Setup
 load_dotenv()
 PURPLE_AIR_API_KEY = os.getenv("PURPLE_AIR_API_KEY")
-st.set_page_config(page_title="Airsense", layout="wide")
+st.set_page_config(page_title="EcoStream", layout="wide")
+#===============================================================================#
 
+
+#===============================================================================#
+# Title
 _, title_col, _ = st.columns([0.1, 9.8, 0.1])
 with title_col:
     st.markdown(
@@ -24,13 +33,16 @@ with title_col:
                 font-size: 60px;
                 font-weight: bold;
                 text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
-            Airsense
+            EcoStream
         </h1>
         """,
         unsafe_allow_html=True
     )
+#===============================================================================#
 
-# Helpers
+
+#===============================================================================#
+# Helpers: Utility functions for loading sensor data, caching, API calls, and sensor selection logic
 @st.cache_data
 def load_sensors():
     with open('sensors/nearbysensors.json', 'r') as f:
@@ -56,8 +68,75 @@ def get_data(sensor_index):
         res.raise_for_status()
         return res.json()
     except Exception as e:
-        st.error(f"API error: {e}", icon="🚨")
+        print(f"API error: {e}")
         return None
+
+def toggle_sensor_selection(sensor_name):
+# Function to toggle sensor selection (single mode only)
+    st.session_state.highlighted_sensor = sensor_name  # Highlight the selected sensor
+    lat, lon = sensor_loc_dict.get(sensor_name)
+    if lat and lon:
+        st.session_state.zoom = 14  # Adjust zoom level for better focus
+        st.session_state.la = lat
+        st.session_state.lo = lon
+#===============================================================================#
+
+
+#===============================================================================#
+# Styling: Custom CSS for Streamlit UI elements and horizontal layout context manager
+st.markdown("""
+            <style>
+                /* Hide Streamlit main menu (hamburger) */
+                #MainMenu {visibility: hidden;}
+                /* Hide Streamlit footer */
+                footer {visibility: hidden;}
+                /* Hide the top toolbar (floating) */
+                header {visibility: hidden;}
+                div.block-container{
+                    padding-top:1rem;
+                }
+            
+                .stApp {
+                    # background-color: rgb(246 248 250);
+                }
+            
+                .stSidebar {
+                    background-color: rgb(246 248 250);
+                    font-family: 'Arial', sans-serif;
+                    # color: #FFFFFF;
+                    border-radius: 10px;
+                    padding: 1rem;
+                }
+
+                .stSidebar img {
+                    width: 100px;
+                    height: auto;
+                    margin-bottom: 1rem;
+                    # background-color: #ffffff;
+                    border-radius: 10px;
+                    padding: 0.5rem;
+                }
+            
+                .stSidebar button {
+                    text-align: left;
+                }
+            
+                section[data-testid="stSidebar"] button {
+                    width: 100%;
+                    display: flex !important;
+                    align-items: left !important;
+            justify-content: left !important;
+                    font-weight: bold !important;
+                    padding: 0.75rem 1.5rem !important;
+                }
+                section[data-testid="stSidebar"] button[kind="tertiary"]:hover {
+                    color: #FFFFFF !important;
+                    background-color: #31383f !important;
+                }
+                   
+            </style>""",
+            unsafe_allow_html=True
+)
 
 HORIZONTAL_STYLE = """
 <style class="hide-element">
@@ -95,18 +174,11 @@ def st_horizontal():
     with st.container():
         st.markdown('<span class="hide-element horizontal-marker"></span>', unsafe_allow_html=True)
         yield
+#===============================================================================#
 
-def toggle_sensor_selection(sensor_name):
-# Function to toggle sensor selection (single mode only)
-    st.session_state.selected_sensors = {sensor_name}  # Only one sensor can be selected
-    lat, lon = sensor_loc_dict.get(sensor_name)
-    print(f"Selected sensor location: Latitude={lat}, Longitude={lon}")  # Log the sensor's location
-    if lat and lon:
-        st.session_state.zoom = 14  # Adjust zoom level for better focus
-        st.session_state.la = lat
-        st.session_state.lo = lon
 
-# Data & State
+#===============================================================================#
+# Data & State: Load sensor data, create lookup dictionaries, and initialize Streamlit session state
 df_sensors = load_sensors()
 sensor_dict = create_dict(df_sensors)
 sensor_loc_dict = create_loc_dict(df_sensors)
@@ -114,18 +186,46 @@ sensor_loc_dict = create_loc_dict(df_sensors)
 # Session init
 st.session_state.setdefault("sensors_selected", [])
 st.session_state.setdefault("sensor_data_selected", [])
-st.session_state.setdefault("chart_dirty", False)
+st.session_state.setdefault("update_chart", False)
 st.session_state.setdefault("last_clicked_location", None)
 st.session_state.setdefault("la", 27.8)  # Default latitude
 st.session_state.setdefault("lo", -97.3)  # Default longitude
 st.session_state.setdefault("zoom", 10)  # Default longitude
 st.session_state.setdefault("last_click_time", None)
 st.session_state.setdefault("highlighted_sensor", None)  # Track the highlighted sensor
-st.session_state.setdefault("selected_sensors", set())  # Initialize selected_sensors to an empty set
+#===============================================================================#
 
+
+#===============================================================================#
+# Sidebar: Render sidebar with navigation buttons and handle page switching
+st.logo(image="images/logo.png", size="large")
+dashboard_clicked = st.sidebar.button("Dashboard", type="tertiary", key="dashboard_btn", icon="🏠")
+about_clicked = st.sidebar.button("About", type="tertiary" ,key="about_btn", icon="ℹ️")
+
+# Determine which page to show
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
+
+if dashboard_clicked:
+    st.session_state.page = "Dashboard"
+
+if about_clicked:
+    st.session_state.page = "About"
+
+if st.session_state.page == "About":
+    about.show_about()
+    st.stop()
+#===============================================================================#
+
+
+#===============================================================================#
+# Main content: Define layout columns for chart and map
 chart_col, map_col = st.columns([3, 2])
+#===============================================================================#
 
-# Map
+
+#===============================================================================#
+# Map: Display interactive map with clustered sensor markers and custom icons
 m = folium.Map(location=[st.session_state.la, st.session_state.lo], zoom_start=st.session_state.zoom, control_scale=True)
 marker_cluster = MarkerCluster().add_to(m)
 custom_icon_url = "https://cdn-icons-png.flaticon.com/512/684/684908.png"  # Example custom marker icon URL
@@ -141,14 +241,18 @@ for _, row in df_sensors.iterrows():
                             <b>Location:</b> {row['latitude']}, {row['longitude']}
                            """,
                            max_width=300),
-        tooltip=f"{row['name'].replace("_", " ")}",
+        tooltip=f"{row['name'].replace('_', ' ')}",
         icon=folium.CustomIcon(custom_icon_url, icon_size=(30, 30))  # Use custom marker icon with specified size
     ).add_to(marker_cluster)
 
 with map_col:
     st.subheader("Map of Nearby Sensors")
     st_data = st_folium(m, height=400)
+#===============================================================================#
 
+
+#===============================================================================#
+# Timeout logic: Reset selection if user is inactive for a set period
 TIMEOUT_SECONDS = 15
 
 if (
@@ -158,11 +262,37 @@ if (
 ):
     st.session_state.last_clicked_location = None
     st.session_state.last_click_time = None
-    st.session_state.chart_dirty = True
-    st.session_state.selected_sensors = set()
+    st.session_state.update_chart = True
+    st.session_state.highlighted_sensor = None  # Reset highlighted sensor
+
+REFRESH_INTERVAL = 60  # Refresh every 10 minutes
+
+if (
+    "last_refresh_time" not in st.session_state or
+    (pd.Timestamp.now() - st.session_state.last_refresh_time).total_seconds() > REFRESH_INTERVAL
+):
+    # Fetch latest data for each selected sensor and update sensor_data_selected
+    refreshed_sensor_data = []
+    for sensor_index, sensor_name in st.session_state.sensors_selected:
+        data = get_data(sensor_index)
+        if data and 'data' in data and data['data']:
+            try:
+                df = pd.DataFrame(data['data'], columns=['timestamp', 'value'])
+                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
+                refreshed_sensor_data.append(df)
+            except Exception as e:
+                print(f"Error refreshing data for sensor {sensor_name}: {e}")
+                refreshed_sensor_data.append(pd.DataFrame(columns=['timestamp', 'value']))
+        else:
+            refreshed_sensor_data.append(pd.DataFrame(columns=['timestamp', 'value']))
+    st.session_state.sensor_data_selected = refreshed_sensor_data
+    st.session_state.update_chart = True
+    st.session_state.last_refresh_time = pd.Timestamp.now()
+#===============================================================================#
 
 
-# Handle clicks
+#===============================================================================#
+# Handle clicks: Process map marker clicks, fetch sensor data, and update session state
 clicked = st_data.get("last_object_clicked")
 
 if clicked and clicked != st.session_state.last_clicked_location:
@@ -181,32 +311,28 @@ if clicked and clicked != st.session_state.last_clicked_location:
             del st.session_state.sensor_data_selected[index]
 
         data = get_data(sensor_index)
-        # print(f"Fetched data for sensor {sensor_name}: {data}")  # Log the fetched data structure
 
         if data and 'data' in data and data['data']:
             print(f"Sensor {sensor_name} data fetched successfully.", len(data['data']))
             try:
                 df = pd.DataFrame(data['data'], columns=['timestamp', 'value'])
-                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
+                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
                 st.session_state.sensors_selected.append([sensor_index, sensor_name])
                 st.session_state.sensor_data_selected.append(df)
-                st.session_state.chart_dirty = True  # Ensure chart_dirty is set
-                print("Data added to session state. Chart marked as dirty.")
-                print(f"Updated sensors_selected: {st.session_state.sensors_selected}")
-                print(f"Updated sensor_data_selected: {len(st.session_state.sensor_data_selected)} dataframes.")
+                st.session_state.update_chart = True  # Ensure update_chart is set
             except Exception as e:
                 print(f"Error processing data for sensor {sensor_name}: {e}")
         else:
             print(f"No valid data found for sensor {sensor_name}. Data structure: {data}")
             with chart_col:
-                st.info("No data for this sensor.", icon="⚠️")
+                st.toast("No data for this sensor.", icon="⚠️")
     else:
         print("No sensor information found for the clicked location.")
-    print("Dirty flag status:", st.session_state.chart_dirty)
+    print("Dirty flag status:", st.session_state.update_chart)
 
 
 # Prepare chart data
-if st.session_state.chart_dirty:
+if st.session_state.update_chart:
     print("Processing chart data...")
     dfs = [df.assign(sensor=st.session_state.sensors_selected[i][1])
            for i, df in enumerate(st.session_state.sensor_data_selected)
@@ -221,35 +347,18 @@ if st.session_state.chart_dirty:
     else:
         st.session_state.pivot_data = None
         print("No valid dataframes to process.")
-    st.session_state.chart_dirty = False
+    st.session_state.update_chart = False
 else:
     print("Chart data is up-to-date.")
 
-# Ensure chart_dirty is set when new data is fetched
+# Ensure update_chart is set when new data is fetched
 if "pivot_data" not in st.session_state or st.session_state.pivot_data is None:
-    st.session_state.chart_dirty = True
-    print("Chart_dirty flag set due to missing or empty pivot_data.")
+    st.session_state.update_chart = True
+    print("update_chart flag set due to missing or empty pivot_data.")
 
 # Show chart using Plotly
 with chart_col:
-    st.markdown(
-        """
-        <div>
-            <h4>Sensor Data Overview</h4>
-        </div>
-        
-        <style>
-            div[data-testid="stVerticalBlock"] {
-                margin-top: 0rem;
-                margin-bottom: 0rem;
-                hieght: 100%;
-                width: 100%;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    # st.subheader("Sensor Data Overview")
+    st.subheader("Sensor Data Overview")
     if "pivot_data" in st.session_state and st.session_state.pivot_data is not None:
         df = st.session_state.pivot_data.reset_index()
         fig = go.Figure()
@@ -262,14 +371,13 @@ with chart_col:
         for i, sensor in enumerate(st.session_state.sensors_selected):
             sensor_name = sensor[1]
             sensor_data = df[['timestamp', sensor_name]].dropna()
+            
+            # opacity logic
+            opacity = 1.0
+            if st.session_state.highlighted_sensor is not None and st.session_state.highlighted_sensor != sensor_name:
+                opacity = 0.2
 
-            # Determine line opacity
-            if st.session_state.selected_sensors:
-                opacity = 1.0 if sensor_name in st.session_state.selected_sensors else 0.2
-            else:
-                opacity = 1.0  # Default to full opacity if no sensor is selected
 
-            # Add a trace for the sensor with an explicit color and dynamic opacity
             fig.add_trace(go.Scatter(
                 x=sensor_data['timestamp'],
                 y=sensor_data[sensor_name],
@@ -277,7 +385,7 @@ with chart_col:
                 name=sensor_name,
                 line=dict(color=color_map[sensor_name], width=2),
                 opacity=opacity,  # Adjust opacity based on selection
-                customdata=[sensor_name] * len(sensor_data),
+                customdata=[sensor_name.replace("_", " ")] * len(sensor_data),
                 showlegend=False,
                 hovertemplate="<b>Sensor:</b> %{customdata}<br><b>PM2.5:</b> %{y}<br><b>Time:</b> %{x}<extra></extra>"
             ))
@@ -331,6 +439,7 @@ with chart_col:
             """
             ,unsafe_allow_html=True
         )
+        # Adding legend elements for each sensor
         with st_horizontal():
             for sensor, trace in zip(st.session_state.sensors_selected, fig.data):
                 sensor_name = sensor[1]
@@ -364,15 +473,21 @@ with chart_col:
                     index = [s[1] for s in st.session_state.sensors_selected].index(sensor_name)
                     del st.session_state.sensors_selected[index]
                     del st.session_state.sensor_data_selected[index]
-                    st.session_state.chart_dirty = True
+                    st.session_state.update_chart = True
                     print(f"Deleted sensor: {sensor_name}")
                     st.rerun()
+            st.write(
+                f"<span style='color: black;'>▬ ▬ Average</span>",
+                unsafe_allow_html=True
+            )
     else:
+        # If no data is available, show a message
         st.markdown(
             """
-            <div style="height: 300px; display: flex; justify-content: center; align-items: center; background-color: #f9f9f9; border: 2px dashed #ddd; border-radius: 10px;">
+            <div style="height: 400px; display: flex; justify-content: center; align-items: center; background-color: #f9f9f9; border: 2px dashed #ddd; border-radius: 10px;">
                 <h2 style="color: #888;">🚫 No sensors selected</h2>
             </div>
             """,
             unsafe_allow_html=True
         )
+#===============================================================================#
