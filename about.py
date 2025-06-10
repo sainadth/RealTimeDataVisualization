@@ -47,7 +47,7 @@ def show_about():
             <div class="about-section-title">About Real-Time Data Visualization</div>
             <div>
                 <p>
-                    <b>EcoStream</b> and <b>Airsense</b> are real-time dashboards for visualizing air quality and environmental sensor data, developed as part of the Research and Extension Experiences for Undergraduates (REEU) program at the 
+                    <b>EcoStream</b> is a real-time dashboards for visualizing air quality and environmental sensor data, developed as part of the Research and Extension Experiences for Undergraduates (REEU) program at the 
                     <a class="about-link" href="https://www.conradblucherinstitute.org/" target="_blank">Conrad Blucher Institute for Surveying and Science (CBI)</a>, Texas A&amp;M University-Corpus Christi.
                 </p>
                 <div class="about-blockquote">

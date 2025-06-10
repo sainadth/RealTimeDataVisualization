@@ -265,7 +265,7 @@ if (
     st.session_state.update_chart = True
     st.session_state.highlighted_sensor = None  # Reset highlighted sensor
 
-REFRESH_INTERVAL = 60  # Refresh every 10 minutes
+REFRESH_INTERVAL = 600  # Refresh every 10 minutes
 
 if (
     "last_refresh_time" not in st.session_state or
@@ -273,6 +273,7 @@ if (
 ):
     # Fetch latest data for each selected sensor and update sensor_data_selected
     refreshed_sensor_data = []
+    sensors_to_keep = []
     for sensor_index, sensor_name in st.session_state.sensors_selected:
         data = get_data(sensor_index)
         if data and 'data' in data and data['data']:
@@ -280,14 +281,21 @@ if (
                 df = pd.DataFrame(data['data'], columns=['timestamp', 'value'])
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
                 refreshed_sensor_data.append(df)
+                sensors_to_keep.append([sensor_index, sensor_name])
             except Exception as e:
                 print(f"Error refreshing data for sensor {sensor_name}: {e}")
                 refreshed_sensor_data.append(pd.DataFrame(columns=['timestamp', 'value']))
+                # Do not add to sensors_to_keep
         else:
-            refreshed_sensor_data.append(pd.DataFrame(columns=['timestamp', 'value']))
+            print(f"No valid data found for sensor {sensor_name} during refresh. Removing from chart.")
+            # Do not add to sensors_to_keep
+
+    # Only keep sensors for which we have valid data
+    st.session_state.sensors_selected = sensors_to_keep
     st.session_state.sensor_data_selected = refreshed_sensor_data
     st.session_state.update_chart = True
     st.session_state.last_refresh_time = pd.Timestamp.now()
+    st.session_state.highlighted_sensor = None  # Reset highlighted sensor
 #===============================================================================#
 
 
@@ -370,13 +378,25 @@ with chart_col:
 
         for i, sensor in enumerate(st.session_state.sensors_selected):
             sensor_name = sensor[1]
-            sensor_data = df[['timestamp', sensor_name]].dropna()
-            
+            try:
+                print(f"Trying to plot sensor: {sensor_name}")
+                print(f"Available columns: {list(df.columns)}")
+                if sensor_name in df.columns:
+                    sensor_data = df[['timestamp', sensor_name]].dropna()
+                else:
+                    print(f"KeyError: Sensor '{sensor_name}' not found in DataFrame columns. Skipping.")
+                    continue
+            except KeyError as e:
+                print(f"KeyError while accessing columns for sensor '{sensor_name}': {e}")
+                continue
+            except Exception as e:
+                print(f"Unexpected error while preparing data for sensor '{sensor_name}': {e}")
+                continue
+
             # opacity logic
             opacity = 1.0
             if st.session_state.highlighted_sensor is not None and st.session_state.highlighted_sensor != sensor_name:
                 opacity = 0.2
-
 
             fig.add_trace(go.Scatter(
                 x=sensor_data['timestamp'],
@@ -443,6 +463,9 @@ with chart_col:
         with st_horizontal():
             for sensor, trace in zip(st.session_state.sensors_selected, fig.data):
                 sensor_name = sensor[1]
+                # Only show label if sensor_name is in df.columns (i.e., has data in chart)
+                if sensor_name not in df.columns:
+                    continue
                 color = color_map[sensor_name]  # Use the explicitly assigned color
                 print(f"Sensor: {sensor_name}, Color: {color}")
                 

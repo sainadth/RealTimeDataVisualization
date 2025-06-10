@@ -1,0 +1,120 @@
+# Presentation Notes
+
+---
+
+## 1. Streamlit Overview
+
+- **Streamlit** is a Python framework for building interactive web apps for data science and machine learning projects.
+- **Why Streamlit?**
+  - No need for front-end web development skills.
+  - Write Python scripts, add Streamlit commands, and instantly get a web app.
+  - Great for prototyping, dashboards, and sharing results with non-technical users.
+- **Key Concepts:**
+  - **Widgets:** Use `st.button`, `st.slider`, `st.text_input`, etc. for user interaction.
+  - **Display:** Use `st.write`, `st.dataframe`, `st.table`, `st.markdown`, etc. to show data and text.
+  - **Charts:** Built-in support for line, bar, area charts, and integration with Plotly, Altair, Matplotlib.
+  - **Layout:** Organize content with columns, containers, and sidebars.
+  - **Session State:** Store variables across user interactions.
+  - **Caching:** Speed up apps by caching expensive computations or data loads.
+- **How to Run:**
+  - In terminal: `streamlit run your_script.py`
+  - The app opens in your browser at `http://localhost:8501`
+- **Best Practices:**
+  - Use caching for data loading and processing.
+  - Use session state for interactive apps.
+  - Organize code into sections and helper functions for clarity.
+
+---
+
+## 2. Tutorial Files
+
+The `tutorial` folder contains small, focused examples. Each file demonstrates a specific Streamlit feature or pattern.
+
+- **helloworld.py**: The simplest app. Shows how to display a title, header, text, and a success message.
+- **textelements.py**: Demonstrates all the ways to display text: title, header, subheader, markdown, code, LaTeX, and JSON.
+- **inputs.py**: Shows how to collect user input with text boxes, text areas, and password fields. Includes validation logic.
+- **buttons.py**: Demonstrates buttons, including conditional actions and a download button for CSV data.
+- **columns.py**: Shows how to arrange content in columns of equal or custom width.
+- **containers.py**: Groups related elements together and uses placeholders for dynamic content updates.
+- **charts.py**: Demonstrates built-in chart types (line, area, bar) and how to display a single column.
+- **metrics.py**: Shows how to display key metrics (KPIs) in a dashboard layout.
+- **dataframes.py**: Shows how to display pandas DataFrames as interactive or static tables.
+- **maps.py**: Demonstrates mapping data using Streamlit's built-in map and Plotly's mapbox.
+- **forms.py**: Uses forms to collect multiple user inputs and only run code when the form is submitted.
+- **session.py**: Demonstrates how to use Streamlit's session state to store and update variables across interactions.
+- **cache.py**: Shows how to use `@st.cache_data` to cache expensive computations or data loading.
+- **applayout.py**: Example of organizing an app with a sidebar, main content, and footer.
+- **plotlycharts.py**: Shows how to create interactive charts with Plotly Express and Plotly Graph Objects.
+- **sidebar.py**: Demonstrates adding filters and forms to the sidebar and using them to filter data.
+
+**How to use these files:**
+- Run any file with `streamlit run tutorial/filename.py`
+- Experiment by editing code and reloading the app to see changes.
+
+---
+
+## 3. Current ecostream.py
+
+**ecostream.py** is a real-world Streamlit dashboard for visualizing air quality sensor data. It combines many Streamlit features into a cohesive, interactive app.
+
+### Main Features
+
+- **Sensor Map:**
+  - Loads sensor locations from a JSON file.
+  - Displays sensors on an interactive map using Folium.
+  - Custom icons and clustering for better visualization.
+  - Clicking a marker fetches recent PM2.5 data for that sensor.
+
+- **Data Fetching:**
+  - Uses the PurpleAir API to get historical PM2.5 data for each sensor.
+  - Data is fetched on demand (when a sensor is clicked) and automatically refreshed every 10 minutes for all selected sensors.
+
+- **Charting:**
+  - Plots time series data for selected sensors using Plotly.
+  - Each sensor is color-coded.
+  - Users can highlight a sensor or remove it from the chart.
+  - Shows an overall average line for context.
+
+- **Session State:**
+  - Remembers which sensors are selected, their data, and UI state (highlighted sensor, map position, etc.).
+  - Ensures the app is interactive and responsive to user actions.
+
+- **Timeouts:**
+  - If the user is inactive for 15 seconds, the selection is reset.
+  - Every 10 minutes, the app automatically refreshes data for all selected sensors.
+
+- **Time Zones:**
+  - All timestamps are converted from UTC to Central Daylight Time (America/Chicago) for local relevance.
+
+- **Sidebar & Navigation:**
+  - Sidebar includes navigation buttons for Dashboard and About pages.
+  - About page describes the project, contributors, and technologies used.
+
+- **Styling:**
+  - Custom CSS for a clean, modern look.
+  - Responsive layout with columns for map and chart.
+
+- **Error Handling:**
+  - Handles API errors and missing data gracefully.
+  - Provides user feedback with toast messages and warnings.
+
+### For New Users
+
+- The code is organized into clear sections with comments.
+- Helper functions are used for data loading, API calls, and UI logic.
+- Session state is used to keep track of selections and chart state.
+- All logic for map, chart, and sidebar is separated for clarity.
+- The app is a good example of how to combine Streamlit, Plotly, and Folium for a real dashboard.
+
+---
+
+**Tips for Presenting:**
+
+- Start with a quick demo of a simple tutorial file (e.g., `helloworld.py` or `textelements.py`).
+- Show how easy it is to add widgets and display data.
+- Move to `ecostream.py` and explain how the same concepts scale up to a real dashboard.
+- Highlight the use of session state, caching, and layout.
+- Emphasize the automatic data refresh and time zone handling.
+- Encourage the audience to experiment with the tutorial files and then explore the main dashboard code.
+
+---

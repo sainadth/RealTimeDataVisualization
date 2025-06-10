@@ -12,7 +12,7 @@ map_data = pd.DataFrame({
 st.map(map_data)
 
 # Plotly map
-fig = px.scatter_mapbox(
+fig = px.scatter_map(
     map_data,
     lat="lat",
     lon="lon",
